@@ -3,54 +3,75 @@ title: "Análisis factorial de componentes principales en la práctica"
 author: "Cristian Sánchez"
 date: "6/5/2021"
 output:
-  html_document: default
-  pdf_document: default
+  html_document:
+    toc: true
+    toc_depth: 2
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
 ```
+<div>
+<p style = 'text-align:center;'>
+<img src="imagen.png">
+</p>
+</div>
 
-### ¿Que es el ACP?
+
+## ¿Que es el ACP?
 
 El análisis de componentes principales (ACP), es una técnica muy utilizada en varias ramas de la ciencia, como las mátematicas, informática, medicina, entre otras. Su utilidad radica en que se puede obtener un resumen de multiples variables, en una menor cantida de dimenciones, siempre y cuando exista la correlación suficiente entre las variables, para que no se pierda una excesiva cantidad de información.
 
 El objetivo del presente análisis, es evidenciar en la practica cual es el correcto uso e interpretación del ACP; para este ejemplo se utiliza la información publicada mensualmente sobre los indicadores financieros bancarios, a través de la pagina oficial de la Super Intendencia de Bancos del Ecuador.
 
-### ¿Cuando es oportuno utilizar el ACP?
+## ¿Cuando es oportuno utilizar el ACP?
 
 El ACP es una técnica exploratoria, que puede ser utilizada para tener un primer panorama sobre un fenómeno poco estudiado; una de las principales restricciones de esta técnica, es que solo se puede utilizar cuando todas las variables son de carácter cuantitativo. Ademas, la calidad en los resultados dependeran de la correlación que exista entre las varaibles; mientras más correlacionadas esten, el análisis sera más exacto.
 
-|Columna 1|Columna 2|
-|--------|--------|
-|    A    |    B    |
-|    C    |    D    |
+
+## ¿Necesito que todas las variables esten en la misma escala de medición?
+
+Por lo general las escaldas de medición de un gran conjunto de datos no son homogeneas; el ACP tiene la cualidad de trabajar con datos ya sean homogeneos o heterogeneos.
+
+El ACP trabaja con una fuerte fundamentación de algebra lineal, y por este motivo, resulta simple dar solución a este tipo de inconvenientes.
+
+* En el caso de contar con variables que esten medidas en la misma escala, por ejemplo: cuando se analizan una base de datos de un curso, donde cada columna representa una materia, las filas el nombre del estudiante, y su intersección la nota del alumna en esa determina materia, se utiliza la matriz de varianzas y covarianzas simbolizada por la letra **S**, y su forma de cálculo puede ser expresada de la siguiente forma. Como se puede evidenciar en este caso, las varaibles son centradas a su respectiva media y esos vectores centralizados, son multiplicados por la misma matriz pero transpuesta. 
+
+$$S=\frac{1}{n}\sum_{i=1}^{n}(x_{i}-\overline{x} )(x_{i}-\overline{x} )^{t}$$
+
+* Para bases de datos con vectores heterogeneos, se utiliza la matriz de correlaciones. El cálculo de esta matriz sigue la misma lógica que el de la matriz de varianzas y covarianzas, con la diferencia que ademas de centralizar los vectores a su media, estos tambien son reducidos, es decir, son divididos a su desviación estandar, y con esto todos los vectores estan en la misma escala.
+
+$$R=\frac{1}{n}\sum_{i=1}^{n}\left ( \frac{x_{i}-\overline{x} }{\sigma } \right )\left ( \frac{x_{i}-\overline{x}}{\sigma } \right )^{t}$$
+
+Una vez seleccionada ya sea la matriz de correlaciones o de varianzas y covarianzas, se procede a obtener los valores y vencores propios, esto se lo realiza en base a la teoría del algebra lineal, sin embargo, en este documento no se abarca la explicacion matemática de dicho cálculo.
 
 
-### ¿Necesito que todas las variables esten en la misma escala de medición?
 
-Por lo general las escaldas de medición de un gran conjunto de datos no son homogeneas, 
+## Análisis de los indicadores financieros del Banco del Pichincha
 
+El analisis financiero de una entidad, generalmente lo realizan expertos en esta rama, sin embargo, matématicamente se puede llegar a las mismas concluciones, sin la necesidad de conocer toda la teoría contable. En el presente ejemplo, se busca identificar cuales son los indicadores financieros que estan mas estrechamente relacionados, y posteriormente agruparlos en **Clusters**.  
 
-**En primera instancia se cargan de los datos en formato excel**
+El primer paso es seleccionar solo los indicadores que pertencen al Banco del Pichincha
 ```{r,warning = FALSE,results = "hide"}
 library("readxl")
-datos <- readxl::read_xlsx(path="C:/Users/Cristian/Desktop/Riesgo financiero/C_BANCOS/b_Grandes.xlsx", sheet=1)
-datos<- datos[,c(4:24)]
+datos <- readxl::read_xlsx(path="BBDD_SuperdeBancos.xlsx", sheet=1)
+datos<- datos[datos[,"banco"]=="BP_PICHINCHA",c(4:24)]
+head(datos)
 ```
 Para mejorar la visualización de los graficos descriptivos, se realiza un diccionario de variables en el cual se asigna un código a cada indicador.
 ```{r,echo = FALSE}
-a<- c('( PATRIMONIO + RESULTADOS ) / ACTIVOS INMOVILIZADOS NETOS','ACTIVOS IMPRODUCTIVOS NETOS / TOTAL ACTIVOS','ACTIVOS PRODUCTIVOS / TOTAL ACTIVOS','ACTIVOS PRODUCTIVOS / PASIVOS CON COSTO', 'MOROSIDAD DE LA CARTERA TOTAL','COBERTURA DE LA CARTERA PROBLEMÁTICA','GASTOS DE OPERACION ESTIMADOS / TOTAL ACTIVO PROMEDIO','GASTOS DE OPERACION  / MARGEN FINANCIERO','GASTOS DE PERSONAL ESTIMADOS / ACTIVO PROMEDIO','RESULTADOS DEL EJERCICIO / PATRIMONIO PROMEDIO','RESULTADOS DEL EJERCICIO / ACTIVO PROMEDIO','CARTERA BRUTA / (DEPOSITOS A LA VISTA + DEPOSITOS A PLAZO)','MARGEN DE INTERMEDIACIÓN ESTIMADO / PATRIMONIO PROMEDIO','MARGEN DE INTERMEDIACIÓN ESTIMADO / ACTIVO PROMEDIO', 'CARTERA POR VENCER TOTAL', 'FONDOS DISPONIBLES / TOTAL DEPOSITOS A CORTO PLAZO','CARTERA IMPRODUCTIVA DESCUBIERTA / (PATRIMONIO + RESULTADOS)','CARTERA IMPRODUCTIVA / PATRIMONIO', 'FK = (PATRIMONIO + RESULTADOS - INGRESOS EXTRAORDINARIOS) / ACTIVOS TOTALES','FI = 1 + (ACTIVOS IMPRODUCTIVOS / ACTIVOS TOTALES)','INDICE DE CAPITALIZACION NETO: FK / FI')
+Nombre_indicador<- c('( PATRIMONIO + RESULTADOS ) / ACTIVOS INMOVILIZADOS NETOS','ACTIVOS IMPRODUCTIVOS NETOS / TOTAL ACTIVOS','ACTIVOS PRODUCTIVOS / TOTAL ACTIVOS','ACTIVOS PRODUCTIVOS / PASIVOS CON COSTO', 'MOROSIDAD DE LA CARTERA TOTAL','COBERTURA DE LA CARTERA PROBLEMÁTICA','GASTOS DE OPERACION ESTIMADOS / TOTAL ACTIVO PROMEDIO','GASTOS DE OPERACION  / MARGEN FINANCIERO','GASTOS DE PERSONAL ESTIMADOS / ACTIVO PROMEDIO','RESULTADOS DEL EJERCICIO / PATRIMONIO PROMEDIO','RESULTADOS DEL EJERCICIO / ACTIVO PROMEDIO','CARTERA BRUTA / (DEPOSITOS A LA VISTA + DEPOSITOS A PLAZO)','MARGEN DE INTERMEDIACIÓN ESTIMADO / PATRIMONIO PROMEDIO','MARGEN DE INTERMEDIACIÓN ESTIMADO / ACTIVO PROMEDIO', 'CARTERA POR VENCER TOTAL', 'FONDOS DISPONIBLES / TOTAL DEPOSITOS A CORTO PLAZO','CARTERA IMPRODUCTIVA DESCUBIERTA / (PATRIMONIO + RESULTADOS)','CARTERA IMPRODUCTIVA / PATRIMONIO', 'FK = (PATRIMONIO + RESULTADOS - INGRESOS EXTRAORDINARIOS) / ACTIVOS TOTALES','FI = 1 + (ACTIVOS IMPRODUCTIVOS / ACTIVOS TOTALES)','INDICE DE CAPITALIZACION NETO: FK / FI')
 
 b<- c("PA1","AC2","AC3","AC4","MT","COBP","GA37","GA38","GA39","RE40","RE41","CA42","MA43","MA44","CT","FOD","CA65","CA66","FK67","FI68","IN69")
 
-dic_variables=as.data.frame(a,b)
-knitr::kable(head(dic_variables,21))
+dic_variables=as.data.frame(Nombre_indicador,b)
+knitr::kable(head(dic_variables,21),caption = 'Diccionario de indicadores')
 ```
 
+A continuaón se muestra un resumen estadístico de los indicadores presentes en la base de datos, donde se puede evidenciar medidas de tendencia central como la media y la mediana, de posición como los cuartiles y de disperción.
 
-A continuaón se muestra un resumen estadístico de los indicadores presentes en la base de datos
+En base a este análisis, se puede tener una primer impreción de cual es la distribución de las variables, no obstante, el ACP al ser una técnica exploratoria de datos, no necesita el cumplimiento de ningún supuesto.
 ```{r}
 summary(datos)
 
@@ -58,34 +79,44 @@ summary(datos)
 
 
 
-## ANÁLISIS DE COMPONENTES PRINCIPALES
-Con el proposito de poder visualizar y medir las correlaciones presentes en el conjunto de datos, se realiza un Análisis de Componentes Principales (ACP), dado que esta técnica permite visualizar grandes cantidades de informaicon en un espacio reducido. 
+## Cálculo de la matrix de correlaciones
+Con el proposito de poder visualizar y medir las correlaciones presentes en el conjunto de datos, se realiza un gráfico de correlaciones, el cual es muy intuitiv; mientras más pintada de azul la intersección de dos variables, existe mayor correlación positiva, y lo contrario con las intersecciones mas rojas. Como resulta evidente, en la diagonal principal de esta matrix, todos los datos son totalmente azules.
 
-+ Para tener una primera aproximación hacia la relación que guardan los indicadores entre si, se presenta la matrix de correlaciones
-```{r,warning=FALSE,results = "hide",error=FALSE,message=FALSE}
+```{r,warning=FALSE,results = "hide",error=FALSE,message=FALSE,echo=FALSE}
 library(corrplot)
 library(PerformanceAnalytics)
-```
-
-```{r,warning=FALSE}
 a=as.data.frame(cor(datos))
 knitr::kable(round(a,2))
+```
+
+```{r,warning=FALSE,results = "hide",error=FALSE,message=FALSE,echo=FALSE}
 corrplot(cor(a))
 ```
 
 
+## Test o prueba de correlaciones
 
 
+```{r,warning=FALSE,error=FALSE,message=FALSE}
+library(psych)
+cortest(cor(datos))
+cortest.bartlett(datos),n=nrow(datos)*ncol(datos))
+```
 
 
-+ A continuación calculamos los vectores y valores propios de la matriz de correlaciones. Para maximazar la varianza se procede a rotar los ejes usando el metodo "Varymax".
+## Obtención de las componentes principales
+
+* A continuación se calcula los vectores y valores propios de la matriz de correlacione y para maximazar la varianza se procede a rotar los ejes usando el metodo "Varymax".
 
 ```{r,results = "hide"}
 (acp.cov <- prcomp(datos))
 diag(1/sqrt(diag(cov(datos)))) %*% acp.cov$rotation %*% diag(acp.cov$sdev)
 acp <- prcomp(datos, scale = TRUE)
 ```
-+ Las cordenadas de las proyecciones ortogonales de la nuve de puntos,se muestran a continuación, considerando un subespacio formado por las dos primeras componentes.
+
+
+
+* Las cordenadas de las proyecciones ortogonales de la nuve de puntos,se muestran a continuación, considerando un subespacio formado por las dos primeras componentes.
 
 ```{r}
 
@@ -93,9 +124,12 @@ G_d=as.data.frame(acp$rotation)
 G_d=as.data.frame(G_d[,c(0:2)])
 knitr::kable(G_d)
 ```
-+ Posteriormente se muestra el circulo de correlaciones, proyectado en las primeras 2 componentes.
 
-```{r,results = "hide"}
+## Circulo de correlaciones
+
+* Posteriormente se muestra el circulo de correlaciones, proyectado en las primeras 2 componentes.
+
+```{r,results = "hide",warning=FALSE,echo=FALSE}
 acp$sdev^2
 (corvar <- acp$rotation %*% diag(acp$sdev))
 acp$x
@@ -114,103 +148,26 @@ text(corvar[,1], corvar[,2], colnames(datos), pos=4, offset=.6, col=2, font=0.00
 
 
 ```
-+ Para obtener un analisis mas robusto, se realiza un cluster análisis para visualizar las agrupaciones de las variables en el circulo de correlaciones.
+
+## Cluster análisis
+* Para obtener un analisis mas robusto, se realiza un cluster análisis para visualizar las agrupaciones de las variables en el circulo de correlaciones.
 
 
 
-```{r pressure, echo=FALSE,,message=FALSE}
+```{r pressure, echo=FALSE,,message=FALSE,warning=FALSE}
 library(factoextra)    
 set.seed(7)
 datos <- scale(G_d)
-km_clusters <- kmeans(x = datos, centers = 8, nstart = 6)
-
-# Las funciones del paquete factoextra emplean el nombre de las filas del
-# dataframe que contiene los datos como identificador de las observaciones.
-# Esto permite añadir labels a los gráficos.
+km_clusters <- kmeans(x = datos, centers = 4, nstart = 4)
 fviz_cluster(object = km_clusters, data = datos, show.clust.cent = TRUE,
-              star.plot = TRUE, repel = TRUE) +
+              ellipse.type="t",star.plot = TRUE, repel = TRUE) +
   labs(title = "Resultados K-means BANCOS GRANDES") +
-  theme_bw() +
-  theme(legend.position = "none")
+  theme_bw() +theme(legend.position = "none")
 ```
 
-## CONCLUCIONES
+## Concluciones
 
-+ Despues de realizar el análisis se puede identificar que hay variables que tienen fuertes correlaciones, y por esto motivo, resulta de gran utilidad realizar el ACP, para analizar agrupacmientos.
+* Despues de realizar el análisis se puede identificar que hay variables que tienen fuertes correlaciones, y por esto motivo, resulta de gran utilidad realizar el ACP, para analizar agrupacmientos.
 
-+ Al realizar el Cluster análisis No Jerarquico utilizando k-means como metodo de agrupamiento, se puede evidenciar la precensia de 8 grupos bien delimitados.
-
-```{R,include=FALSE}
-Cluster1=as.data.frame(c(dic_variables["RE40", ],
-    dic_variables["RE41", ],
-    dic_variables["MA44", ],
-    dic_variables["MA43", ]))
-Cluster1
-
-Cluster2=as.data.frame(c(dic_variables["GA39", ],
-    dic_variables["CA65", ]))
-Cluster2
-
-Cluster3=as.data.frame(c(dic_variables["AC4", ],
-    dic_variables["AC3", ],
-    dic_variables["GA37", ]))
-Cluster3
-
-Cluster4=as.data.frame(c(dic_variables["CA66", ],
-    dic_variables["MT", ]))
-Cluster4
-
-Cluster5=as.data.frame(c(dic_variables["COBP", ],
-    dic_variables["CT", ]))
-Cluster5
-
-Cluster6=as.data.frame(c(dic_variables["GA38", ]))
-Cluster6
-
-Cluster7=as.data.frame(c(dic_variables["FOD", ],
-    dic_variables["FI68", ],
-    dic_variables["AC2", ]))
-Cluster7
-
-Cluster8=as.data.frame(c(dic_variables["IN69", ],
-    dic_variables["FK67", ],
-    dic_variables["CA42", ],
-    dic_variables["PA1", ]))
-Cluster8
-
-```
-
-```{R}
-knitr::kable(Cluster1)
-
-knitr::kable(Cluster2)
-
-knitr::kable(Cluster3)
-
-knitr::kable(Cluster4)
-
-knitr::kable(Cluster5)
-
-knitr::kable(Cluster6)
-
-knitr::kable(Cluster7)
-
-knitr::kable(Cluster8)
-
-```
-
-Para no incurrir en la selcciçon de indicadores correlacionados, se procede a seleccionar un indicador de cada gurpo, referente a su aporte en la formación de cada eje factorial.
-
-+ RESULTADOS DEL EJERCICIO / PATRIMONIO PROMEDIO
-+ GASTOS DE PERSONAL ESTIMADOS / ACTIVO PROMEDIO
-+ CARTERA IMPRODUCTIVA DESCUBIERTA / (PATRIMONIO + RESULTADOS)
-+ ACTIVOS PRODUCTIVOS / TOTAL ACTIVOS
-+ MOROSIDAD TOTAL
-+ CARTERA POR VENCER TOTAL
-+ GASTOS DE OPERACION  / MARGEN FINANCIERO
-+ FI = 1 + (ACTIVOS IMPRODUCTIVOS / ACTIVOS TOTALES)
-
-
-Con respecto al Cluster2, se seleccionan los 2 indicadores que lo conforman, dado que la distancia que existe entre estos dos es relativamente grande. En contraste, ninguno de los indicadores que conforman el Cluster8 son seleccionados, debido, a que sus coordenadas son cercanas al origen, es decir, su aporte no es significativo para ninguno de los ejes factoriales.
-
+* Al realizar el Cluster análisis No Jerarquico utilizando k-means como metodo de agrupamiento, se puede evidenciar la precensia de 8 grupos bien delimitados.
 
