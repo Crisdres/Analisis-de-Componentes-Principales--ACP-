@@ -395,18 +395,18 @@ summary {
 </div>
 <div id="cuando-es-oportuno-utilizar-el-acp" class="section level2">
 <h2>¿Cuando es oportuno utilizar el ACP?</h2>
-<p>El ACP es una técnica exploratoria, que puede ser utilizada para tener un primer panorama sobre un fenómeno poco estudiado; una de las principales restricciones de esta técnica, es que solo se puede utilizar cuando todas las variables son de carácter cuantitativo. Ademas, la calidad en los resultados dependerán de la correlación que exista entre las varaibles; mientras más correlacionadas estén, el análisis será más exacto.</p>
+<p>El ACP es una técnica exploratoria, que puede ser utilizada para tener un primer panorama sobre un fenómeno poco estudiado; una de las principales restricciones de esta técnica, es que solo se puede utilizar cuando todas las variables son de carácter cuantitativo. Además, la calidad en los resultados dependerán de la correlación que exista entre las varaibles; mientras más correlacionadas estén, el análisis será más exacto.</p>
 </div>
 <div id="se-necesita-que-todas-las-variables-estén-en-la-misma-escala-de-medición" class="section level2">
 <h2>¿Se necesita que todas las variables estén en la misma escala de medición?</h2>
 <p>Por lo general las escaldas de medición de un gran conjunto de datos no son homogéneas; el ACP tiene la cualidad de trabajar con datos ya sean homogéneos o heterogéneos.</p>
 <p>El ACP trabaja con una fuerte fundamentación de algebra lineal, y por este motivo, resulta simple dar solución a este tipo de inconvenientes.</p>
 <ul>
-<li>En el caso de contar con variables que estén medidas en la misma escala, por ejemplo: cuando se analizan una base de datos de un curso, donde cada columna representa una materia, las filas el nombre del estudiante, y su intersección la nota del alumno en esa determinada materia, se utiliza la matriz de varianzas y covarianzas simbolizada por la letra <strong>S</strong>, y su forma de cálculo puede ser expresada de la siguiente forma. Como se puede evidenciar en este caso, las varaibles son centradas a su respectiva media y esos vectores centralizados, son multiplicados por la misma matriz pero transpuesta.</li>
+<li>En el caso de contar con variables que estén medidas en la misma escala, por ejemplo: cuando se analiza una base de datos de un curso, donde cada columna representa una materia, las filas el nombre del estudiante, y su intersección la nota del alumno en esa determinada materia, se utiliza la matriz de varianzas y covarianzas simbolizada por la letra <strong>S</strong>, y su forma de cálculo puede ser expresada de la siguiente forma. Como se puede evidenciar en este caso, las varaibles son centradas a su respectiva media y esos vectores centralizados, son multiplicados por la misma matriz pero transpuesta.</li>
 </ul>
 <p><span class="math display">\[S=\frac{1}{n}\sum_{i=1}^{n}(x_{i}-\overline{x} )(x_{i}-\overline{x} )^{t}\]</span></p>
 <ul>
-<li>Para bases de datos con vectores heterogéneos, se utiliza la matriz de correlaciones. El cálculo de esta matriz sigue la misma lógica que el de la matriz de varianzas y covarianzas, con la diferencia que ademas de centralizar los vectores a su media, estos también son reducidos, es decir, son divididos a su desviación estándar, y con esto todos los vectores están en la misma escala.</li>
+<li>Para bases de datos con vectores heterogéneos, se utiliza la matriz de correlaciones. El cálculo de esta matriz sigue la misma lógica que el de la matriz de varianzas y covarianzas, con la diferencia que además de centralizar los vectores a su media, estos también son reducidos, es decir, son divididos a su desviación estándar, y con esto todos los vectores estarán en la misma escala.</li>
 </ul>
 <p><span class="math display">\[R=\frac{1}{n}\sum_{i=1}^{n}\left ( \frac{x_{i}-\overline{x} }{\sigma } \right )\left ( \frac{x_{i}-\overline{x}}{\sigma } \right )^{t}\]</span></p>
 <p>Una vez seleccionada ya sea la matriz de correlaciones o de varianzas y covarianzas, se procede a obtener los valores y vectores propios, esto se lo realiza en base a la teoría del álgebra lineal, sin embargo, en este documento no se abarca la explicación matemática de dicho cálculo.</p>

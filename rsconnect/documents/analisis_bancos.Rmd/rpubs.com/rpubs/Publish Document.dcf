@@ -1,0 +1,11 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/768043/892b2a618ccf46c09ee4d2d522b7d1f9
+bundleId: https://api.rpubs.com/api/v1/document/768043/892b2a618ccf46c09ee4d2d522b7d1f9
+url: http://rpubs.com/crisdres/768043
+when: 1621005118.8616
+lastSyncTime: 1621005118.8616
